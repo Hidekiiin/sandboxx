@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>p5.js Game</title>
+  <!-- p5.js を CDN で読み込む -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // 🎮 ゲーム変数
+    let ball;
+    let gravity = 0.6;
+    let lift = -12;
+    let obstacles = [];
+    let score = 0;
+
+    // 🎮 ボールクラス
+    class Ball {
+      constructor() {
+        this.x = 50;
+        this.y = height / 2;
+        this.r = 20;
+        this.speed = 0;
+      }
+
+      jump() {
+        this.speed = lift;
+      }
+
+      update() {
+        this.speed += gravity;
+        this.y += this.speed;
+
+        if (this.y > height - this.r) {
+          this.y = height - this.r;
+          this.speed = 0;
+        }
+        if (this.y < this.r) {
+          this.y = this.r;
+          this.speed = 0;
+        }
+      }
+
+      show() {
+        fill(255, 0, 0);
+        ellipse(this.x, this.y, this.r * 2);
+      }
+    }
+
+    // 🎮 障害物クラス
+    class Obstacle {
+      constructor() {
+        this.x = width;
+        this.y = height - 40;
+        this.w = 40;
+        this.h = 40;
+        this.speed = 6;
+      }
+
+      move() {
+        this.x -= this.speed;
+      }
+
+      show() {
+        fill(0, 255, 0);
+        rect(this.x, this.y, this.w, this.h);
+      }
+
+      offscreen() {
+        return this.x < -this.w;
+      }
+
+      hits(ball) {
+        return (
+          ball.y + ball.r > this.y &&
+          ball.x + ball.r > this.x &&
+          ball.x - ball.r < this.x + this.w
+        );
+      }
+    }
+
+    // 🎮 ゲーム初期化
+    function setup() {
+      createCanvas(window.innerWidth, window.innerHeight);
+      ball = new Ball();
+    }
+
+    // 🎮 メインループ
+    function draw() {
+      background(135, 206, 250);
+
+      // スコア表示
+      fill(0);
+      textSize(24);
+      text(`🏆 スコア: ${score}`, 10, 30);
+
+      ball.update();
+      ball.show();
+
+      // 障害物生成
+      if (frameCount % 80 === 0) {
+        obstacles.push(new Obstacle());
+      }
+
+      // 障害物表示 & 衝突判定
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        obstacles[i].move();
+        obstacles[i].show();
+
+        if (obstacles[i].hits(ball)) {
+          console.log('💥 ゲームオーバー！');
+          noLoop(); // ゲーム停止
+        }
+
+        if (obstacles[i].offscreen()) {
+          obstacles.splice(i, 1);
+          score++;
+        }
+      }
+    }
+
+    // 🎮 スペースキーでジャンプ
+    function keyPressed() {
+      if (key === ' ') {
+        ball.jump();
+      }
+    }
+  </script>
+</body>
+</html>
